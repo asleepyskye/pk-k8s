@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pluralkit-scheduled-tasks
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pluralkit-scheduled-tasks
+  template:
+    metadata:
+      labels:
+        app: pluralkit-scheduled-tasks
+    spec:
+      containers:
+      - name: scheduled-tasks
+        image: registry.den.vixen.lgbt/scheduled_tasks:latest
+        command: [ "/scheduled_tasks" ]
+        resources:
+          requests:
+            cpu: 1
+        envFrom:
+        - configMapRef:
+            name: pluralkit-config-shared
+        env:
+        # Secrets
+        - name: pluralkit__discord__bot_token
+          valueFrom:
+            secretKeyRef:
+              name: discord-token
+              key: credential
+        - name: pluralkit__db__db_password
+          valueFrom:
+            secretKeyRef:
+              name: database-password
+              key: credential
+        - name: pluralkit__sentry_url
+          valueFrom:
+            secretKeyRef:
+              name: dotnet-bot-sentry-url
+              key: credential
+
+        # Misc
+        - name: pluralkit__discord__max_concurrency
+          value: '1'
+        - name: pluralkit__scheduled_tasks__set_guild_count
+          value: 'true'
+        - name: pluralkit__scheduled_tasks__gateway_url
+          value: 'pluralkit-gateway:5000'
+        - name: pluralkit__scheduled_tasks__vm_url
+          value: 'http://vm.pk.den.vixen.lgbt:8428'
+        - name: pluralkit__scheduled_tasks__expected_gateway_count
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: PluralKit__TotalClusters
+        - name: pluralkit__discord__cluster__node_id
+          value: '0'
+        - name: pluralkit__discord__cluster__total_shards
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: PluralKit__TotalShards

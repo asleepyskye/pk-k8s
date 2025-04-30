@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pluralkit-dotnet-bot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pluralkit-dotnet-bot
+  template:
+    metadata:
+      labels:
+        app: pluralkit-dotnet-bot
+    spec:
+      containers:
+      - name: dotnet-bot
+        resources:
+          requests:
+            cpu: 2
+        ports:
+        - containerPort: 5002
+        image: ghcr.io/pluralkit/pluralkit
+        command: [ "dotnet", "bin/PluralKit.Bot.dll" ]
+        envFrom:
+        - configMapRef:
+            name: pluralkit-config-shared
+        env:
+        # Secrets
+        - name: PluralKit__Bot__Token
+          valueFrom:
+            secretKeyRef:
+              name: discord-token
+              key: credential
+        - name: PluralKit__DatabasePassword
+          valueFrom:
+            secretKeyRef:
+              name: database-password
+              key: credential
+        - name: PluralKit__SentryUrl
+          valueFrom:
+            secretKeyRef:
+              name: dotnet-bot-sentry-url
+              key: credential
+        - name: PluralKit__DispatchProxyToken
+          valueFrom:
+            secretKeyRef:
+              name: dispatch-proxy-token
+              key: credential
+
+        # Renamed
+        - name: PluralKit__Bot__Cluster__TotalShards
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: PluralKit__TotalShards
+        - name: PluralKit__Bot__ClientId
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: pluralkit__discord__client_id
+
+        # Misc
+        - name: PluralKit__Bot__Cluster__NodeName # needed for bot to not crash
+          value: 'whatever-0'
+        - name: PluralKit__Bot__HttpListenerAddr
+          value: '0.0.0.0'
+        - name: PluralKit__Bot__DisableGateway
+          value: 'true'
+        - name: PluralKit__Bot__HttpCacheUrl
+          value: 'pluralkit-gateway-{clusterid}.pluralkit-gateway.pluralkit.svc.cluster.local:5000'
+        - name: PluralKit__Bot__EventAwaiterTarget
+          value: 'source-addr'
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pluralkit-dotnet-bot
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: bot
+    port: 5002
+    protocol: TCP
+    targetPort: 5002
+  selector:
+    app: pluralkit-dotnet-bot
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pluralkit-dotnet-bot-headless
+spec:
+  clusterIP: None
+  selector:
+    app: pluralkit-dotnet-bot
+  ports:
+  - port: 5002
