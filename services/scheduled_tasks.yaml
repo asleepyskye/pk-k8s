@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: scheduled-tasks
-        image: registry.den.vixen.lgbt/scheduled_tasks:latest
+        image: registry.den.vixen.lgbt/pluralkit/scheduled_tasks:latest
         command: [ "/scheduled_tasks" ]
         resources:
           requests:
@@ -46,9 +46,12 @@ spec:
         - name: pluralkit__scheduled_tasks__set_guild_count
           value: 'true'
         - name: pluralkit__scheduled_tasks__gateway_url
-          value: 'pluralkit-gateway:5000'
-        - name: pluralkit__scheduled_tasks__vm_url
-          value: 'http://vm.pk.den.vixen.lgbt:8428'
+          value: 'http://pluralkit-gateway-{clusterid}.pluralkit-gateway:5000/stats'
+        - name: pluralkit__scheduled_tasks__prometheus_url
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: PluralKit__VMUrl
         - name: pluralkit__scheduled_tasks__expected_gateway_count
           valueFrom:
             configMapKeyRef:

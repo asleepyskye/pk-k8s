@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pluralkit-dispatch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pluralkit-dispatch
+  template:
+    metadata:
+      labels:
+        app: pluralkit-dispatch
+    spec:
+      containers:
+      - name: dispatch
+        image: ghcr.io/pluralkit/dispatch
+        resources:
+          requests:
+            cpu: 1
+        env:
+        # Misc
+        - name: RUST_LOG
+          value: 'info'
+        - name: DNS_UPSTREAM
+          value: '1.1.1.1:53'
+        - name: HTTP_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: dispatch-proxy-token
+              key: credential
+          
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pluralkit-dispatch
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: dispatch
+    port: 5000
+    protocol: TCP
+    targetPort: 5000
+  selector:
+    app: pluralkit-dispatch
+  type: ClusterIP

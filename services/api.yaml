@@ -1,0 +1,131 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pluralkit-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pluralkit-api
+  template:
+    metadata:
+      labels:
+        app: pluralkit-api
+    spec:
+      containers:
+      - name: dotnet-api
+        resources:
+          requests:
+            cpu: 1
+        image: ghcr.io/pluralkit/pluralkit
+        command: [ "dotnet", "bin/PluralKit.API.dll" ]
+        envFrom:
+        - configMapRef:
+            name: pluralkit-config-shared
+        env:
+        # Secrets
+        - name: PluralKit__Bot__Token
+          valueFrom:
+            secretKeyRef:
+              name: discord-token
+              key: credential
+        - name: PluralKit__DatabasePassword
+          valueFrom:
+            secretKeyRef:
+              name: database-password
+              key: credential
+        - name: PluralKit__SentryUrl
+          valueFrom:
+            secretKeyRef:
+              name: dotnet-bot-sentry-url
+              key: credential
+        - name: PluralKit__DispatchProxyToken
+          valueFrom:
+            secretKeyRef:
+              name: dispatch-proxy-token
+              key: credential
+        - name: PluralKit__Api__ClientSecret
+          valueFrom:
+            secretKeyRef:
+              name: discord-client-secret
+              key: credential
+
+        # Renamed
+        - name: PluralKit__Api__ClientId
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: pluralkit__discord__client_id
+
+        # Misc
+        - name: PluralKit__Api__TrustAuth
+          value: 'true'
+
+      - name: rust-api
+        image: ghcr.io/pluralkit/api
+        resources:
+          requests:
+            cpu: 1
+        envFrom:
+        - configMapRef:
+            name: pluralkit-config-shared
+        env:
+        # Secrets
+        - name: pluralkit__discord__bot_token
+          valueFrom:
+            secretKeyRef:
+              name: discord-token
+              key: credential
+        - name: pluralkit__db__db_password
+          valueFrom:
+            secretKeyRef:
+              name: database-password
+              key: credential
+        - name: pluralkit__sentry_url
+          valueFrom:
+            secretKeyRef:
+              name: dotnet-bot-sentry-url
+              key: credential
+        - name: pluralkit__api__temp_token2
+          valueFrom:
+            secretKeyRef:
+              name: api-token2
+              key: credential
+        
+        # Misc
+        - name: pluralkit__api__ratelimit_redis_addr
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: pluralkit__db__data_redis_addr
+        - name: pluralkit__api__addr
+          value: '0.0.0.0:5001'
+        - name: pluralkit__api__remote_url
+          value: "http://localhost:5000"
+        - name: pluralkit__discord__cluster__node_id
+          value: '0'
+        - name: pluralkit__discord__max_concurrency
+          value: '1'
+        - name: pluralkit__discord__cluster__total_shards
+          valueFrom:
+            configMapKeyRef:
+              name: pluralkit-config-shared
+              key: PluralKit__TotalClusters
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pluralkit-api
+spec:
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: api
+    port: 5001
+    protocol: TCP
+    targetPort: 5001
+  selector:
+    app: pluralkit-api
+  type: ClusterIP

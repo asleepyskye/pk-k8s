@@ -4,7 +4,7 @@ metadata:
   name: pluralkit-gateway
 spec:
   serviceName: pluralkit-gateway
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: pluralkit-gateway
@@ -52,7 +52,7 @@ spec:
         
         # Misc
         - name: pluralkit__discord__max_concurrency
-          value: '16'
+          value: '1'
         - name: pluralkit__runtime_config_key
           value: 'gateway-k8s'
         - name: STATEFULSET_NAME_FOR_INDEX # gets turned into node_id by rust code

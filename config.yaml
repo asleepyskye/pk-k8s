@@ -7,14 +7,15 @@ data:
 
   # Service URLs
   #PluralKit__ElasticUrl: 'http://es.pk.den.vixen.lgbt'
-  #PluralKit__DispatchProxyUrl: 'http://dispatch.pk.den.vixen.lgbt'
-  #PluralKit__Bot__AvatarServiceUrl: 'http://avatars.pk.den.vixen.lgbt'
+  PluralKit__DispatchProxyUrl: 'http://pluralkit-dispatch.pluralkit.svc.cluster.local:5000'
+  PluralKit__Bot__AvatarServiceUrl: 'http://avatars.pk.den.vixen.lgbt'
+  PluralKit__VMUrl: 'http://10.10.5.30:8428'
 
-  #pluralkit__discord__api_base_url: 'discord.com'
-  #PluralKit__Bot__DiscordBaseUrl: 'https://discord.com/api/v10'
+  pluralkit__discord__api_base_url: 'discord.com'
+  PluralKit__Bot__DiscordBaseUrl: 'https://discord.com/api/v10'
 
   # Database
-  PluralKit__InfluxUrl: 'http://vm.pk.den.vixen.lgbt:8428/write'
+  PluralKit__InfluxUrl: 'http://10.10.5.30:8428/write'
   PluralKit__InfluxDb: 'pluralkit'
 
   PluralKit__RedisAddr: '10.10.5.30:6379,abortConnect=false'
@@ -27,12 +28,12 @@ data:
   pluralkit__db__stats_db_uri: 'postgresql://pluralkit@10.10.5.30:5432/stats'
 
   # Discord
-  PluralKit__Bot__AdminRole: '913986523500777482'
+  PluralKit__Bot__AdminRole: '1367216717918634204'
   pluralkit__discord__client_id: '1360066850939212085'
   
-  PluralKit__TotalShards: '48'
-  PluralKit__TotalClusters: '3'
-  pluralkit__discord__cluster__total_nodes: '3'
+  PluralKit__TotalShards: '32'
+  PluralKit__TotalClusters: '2'
+  pluralkit__discord__cluster__total_nodes: '2' #this needs to be moved/renamed...
 
   pluralkit__discord__client_secret: '1'
 
